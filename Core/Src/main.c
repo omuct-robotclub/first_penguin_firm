@@ -31,6 +31,14 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+#define PWM_HI (45)
+#define PWM_LO (22)
+
+// LED parameters
+#define NUM_BPP (3)
+#define NUM_PIXELS (8)
+#define NUM_BYTES (NUM_BPP * NUM_PIXELS)
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -49,6 +57,13 @@ DMA_HandleTypeDef hdma_tim3_ch4_up;
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
+// LED color buffer
+uint8_t rgb_arr[NUM_BYTES];
+
+// LED write buffer
+#define WRITE_BUF_LEN (NUM_BPP * 8)
+uint8_t wr_buf[WRITE_BUF_LEN];
+uint_fast8_t wr_buf_p = 0;
 
 /* USER CODE END PV */
 
@@ -62,7 +77,10 @@ static void MX_TIM3_Init(void);
 static void MX_DMA_Init(void);
 static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
-void neopixel_write(*bytes[]);  // low bit 22/89  high bit 45/89
+void led_set_RGB(uint8_t index, uint8_t r, uint8_t g, uint8_t b);
+void led_set_all_RGBW(uint8_t r, uint8_t g, uint8_t b);
+void led_render();
+//void neopixel_write(*bytes[]);  // low bit 22/89  high bit 45/89
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -105,16 +123,26 @@ int main(void)
   MX_DMA_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+  HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1);
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
+  HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_2);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 1600);
+	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 300);
+	  HAL_Delay(1000);
+	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 300);
+	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 1600);
+	  HAL_Delay(1000);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
   }
   /* USER CODE END 3 */
 }
@@ -496,7 +524,39 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void led_set_RGB(uint8_t index, uint8_t r, uint8_t g, uint8_t b) {
+  rgb_arr[3 * index    ] = g;
+  rgb_arr[3 * index + 1] = r;
+  rgb_arr[3 * index + 2] = b;
+}
 
+void led_set_all_RGB(uint8_t r, uint8_t g, uint8_t b) {
+  for(uint_fast8_t i = 0; i < NUM_PIXELS; ++i) led_set_RGB(i, r, g, b);
+}
+
+void led_render() {
+  if(wr_buf_p != 0 || hdma_tim3_ch4.State != HAL_DMA_STATE_READY) {
+    // Ongoing transfer, cancel!
+    for(uint8_t i = 0; i < WR_BUF_LEN; ++i) wr_buf[i] = 0;
+    wr_buf_p = 0;
+    HAL_TIM_PWM_Stop_DMA(&htim3, TIM_CHANNEL_4);
+    return;
+  }
+  // Ooh boi the first data buffer half (and the second!)
+  for(uint_fast8_t i = 0; i < 8; ++i) {
+    wr_buf[i     ] = PWM_LO << (((rgb_arr[0] << i) & 0x80) > 0);
+    wr_buf[i +  8] = PWM_LO << (((rgb_arr[1] << i) & 0x80) > 0);
+    wr_buf[i + 16] = PWM_LO << (((rgb_arr[2] << i) & 0x80) > 0);
+    wr_buf[i + 24] = PWM_LO << (((rgb_arr[3] << i) & 0x80) > 0);
+    wr_buf[i + 32] = PWM_LO << (((rgb_arr[4] << i) & 0x80) > 0);
+    wr_buf[i + 40] = PWM_LO << (((rgb_arr[5] << i) & 0x80) > 0);
+    wr_buf[i + 48] = PWM_LO << (((rgb_arr[6] << i) & 0x80) > 0);
+    wr_buf[i + 56] = PWM_LO << (((rgb_arr[7] << i) & 0x80) > 0);
+  }
+
+  HAL_TIM_PWM_Start_DMA(&htim3, TIM_CHANNEL_4, (uint32_t *)wr_buf, WR_BUF_LEN);
+  wr_buf_p = 2; // Since we're ready for the next buffer
+}
 /* USER CODE END 4 */
 
 /**
