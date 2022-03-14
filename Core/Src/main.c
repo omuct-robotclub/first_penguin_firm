@@ -221,7 +221,7 @@ static void MX_CAN_Init(void)
   /* USER CODE END CAN_Init 1 */
   hcan.Instance = CAN;
   hcan.Init.Prescaler = 2;
-  hcan.Init.Mode = CAN_MODE_NORMAL;
+  hcan.Init.Mode = CAN_MODE_LOOPBACK;
   hcan.Init.SyncJumpWidth = CAN_SJW_1TQ;
   hcan.Init.TimeSeg1 = CAN_BS1_14TQ;
   hcan.Init.TimeSeg2 = CAN_BS2_3TQ;
@@ -263,7 +263,7 @@ static void MX_TIM1_Init(void)
   htim1.Instance = TIM1;
   htim1.Init.Prescaler = 0;
   htim1.Init.CounterMode = TIM_COUNTERMODE_CENTERALIGNED1;
-  htim1.Init.Period = 3277;
+  htim1.Init.Period = 4096;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
   htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -403,7 +403,7 @@ static void MX_TIM3_Init(void)
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim3.Init.Period = 89;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
   {
     Error_Handler();
@@ -530,7 +530,6 @@ void led_render_all() {
   if(hdma_tim3_ch4_up.State != HAL_DMA_STATE_READY) {
     HAL_TIM_PWM_Stop_DMA(&htim3, TIM_CHANNEL_4);
   }
-  // Ooh boi the first data buffer half (and the second!)
   for(uint_fast8_t i = 0; i < NUM_BYTES; i++) {
 	  for(uint_fast8_t j = 0; j < 8; j++){
 		wr_buf[i * 8 + j] = PIXEL_PWM_LEN[((rgb_arr[i] << j) & 0b10000000) > 0];
