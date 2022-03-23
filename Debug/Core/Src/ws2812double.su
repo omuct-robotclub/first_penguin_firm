@@ -1,0 +1,3 @@
+ws2812double.cpp:12:6:void ws2812::ws2812_double::update_write_buffer()	24	static
+ws2812double.cpp:25:6:void ws2812::ws2812_double::rend()	16	static
+ws2812double.cpp:33:1:ws2812::ws2812_double::ws2812_double(TIM_HandleTypeDef*, uint32_t, DMA_HandleTypeDef*, uint8_t, uint8_t)	24	static

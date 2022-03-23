@@ -120,11 +120,11 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_CAN_Init();
   MX_TIM1_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
-  MX_DMA_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   setup_fillter_CAN();
@@ -135,8 +135,10 @@ int main(void)
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
   HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_2);
 
-  uint8_t hello[5] = "hello";
-  uint8_t world[5] = "world";
+  ws2812::ws2812_double pixels(&htim3, TIM_CHANNEL_4, &hdma_tim3_ch4_up, 45, 22);
+
+  uint8_t hello[] = "hello";
+  uint8_t world[] = "world";
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -147,18 +149,24 @@ int main(void)
 	  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_5);
 	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 1600);
 	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 300);
-	  led_set_RGB(0, 32, 0, 0);
-	  led_set_RGB(1, 0, 32, 0);
-	  led_render_all();
+//	  led_set_RGB(0, 32, 0, 0);
+//	  led_set_RGB(1, 0, 32, 0);
+//	  led_render_all();
+	  pixels.colors[0] = {32, 0, 0};
+	  pixels.colors[1] = {0, 32, 0};
+	  pixels.rend();
 	  send_message_CAN();
 	  HAL_Delay(1000);
 	  HAL_UART_Transmit(&huart1, world, 5, 1);
 	  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_5);
 	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 300);
 	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 1600);
-	  led_set_RGB(0, 0, 0, 32);
-	  led_set_RGB(1, 16, 16, 16);
-	  led_render_all();
+//	  led_set_RGB(0, 0, 0, 32);
+//	  led_set_RGB(1, 16, 16, 16);
+//	  led_render_all();
+	  pixels.colors[0] = {0, 0, 32};
+	  pixels.colors[1] = {16, 16, 16};
+	  pixels.rend();
 	  send_usart1_CAN_mailbox();
 	  HAL_Delay(1000);
     /* USER CODE END WHILE */
@@ -594,12 +602,12 @@ void send_usart1_CAN_mailbox(){
 	CAN_RxHeaderTypeDef RxHeader;
 	uint32_t id;
 	uint32_t dlc;
-	uint8_t RxData[8] = "nnnnnnnn";
+	uint8_t RxData[] = "nnnnnnnn";
 	if (HAL_CAN_GetRxMessage(&hcan, CAN_RX_FIFO0, &RxHeader, RxData) == HAL_OK)
 	{
 		id = (RxHeader.IDE == CAN_ID_STD)? RxHeader.StdId : RxHeader.ExtId;     // ID
 		dlc = RxHeader.DLC;
-		HAL_UART_Transmit(&huart1, "Received", 8, 1);
+		HAL_UART_Transmit(&huart1, (uint8_t*)"Received", 8, 1);
 	}
 	HAL_UART_Transmit(&huart1, RxData, 8, 1);
 }

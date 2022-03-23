@@ -1,5 +1,5 @@
-Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_cortex.o: \
- ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_cortex.c \
+Core/Src/ws2812double.o: ../Core/Src/ws2812double.cpp \
+ ../Core/Src/ws2812double.h \
  ../Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal.h \
  ../Core/Inc/stm32f3xx_hal_conf.h \
  ../Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_rcc.h \
@@ -30,6 +30,8 @@ Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_cortex.o: \
  ../Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_tim_ex.h \
  ../Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_uart.h \
  ../Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_uart_ex.h
+
+../Core/Src/ws2812double.h:
 
 ../Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal.h:
 
