@@ -37,6 +37,8 @@ const uint8_t PIXEL_PWM_LEN[] = { 22, 45 };
 #define NUM_BPP (3)
 #define NUM_PIXELS (2)
 #define NUM_BYTES (NUM_BPP * NUM_PIXELS)
+#define DATA_LEN (NUM_BYTES * 8)
+#define RESET_TIME_LEN (1)
 
 /* USER CODE END PD */
 
@@ -60,10 +62,12 @@ UART_HandleTypeDef huart1;
 uint8_t rgb_arr[NUM_BYTES];
 
 // LED write buffer
-#define WRITE_BUF_LEN (NUM_BYTES * 8)
+#define WRITE_BUF_LEN (DATA_LEN + RESET_TIME_LEN)
 uint8_t wr_buf[WRITE_BUF_LEN];
 uint_fast8_t wr_buf_p = 0;
 
+// CAN filter buffer
+CAN_FilterTypeDef filter;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -79,6 +83,10 @@ static void MX_USART1_UART_Init(void);
 void led_set_RGB(uint8_t index, uint8_t r, uint8_t g, uint8_t b);
 void led_set_all_RGB(uint8_t r, uint8_t g, uint8_t b);
 void led_render_all();
+
+void setup_fillter_CAN();
+int send_message_CAN();
+void send_usart1_CAN_mailbox();
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -114,13 +122,16 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_CAN_Init();
   MX_TIM1_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
-  MX_DMA_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
+  setup_fillter_CAN();
+  HAL_CAN_Start(&hcan);
+
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
   HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
@@ -138,17 +149,19 @@ int main(void)
 	  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_5);
 	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 1600);
 	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 300);
-	  led_set_RGB(0, 128, 0, 0);
-	  led_set_RGB(1, 0, 128, 0);
+	  led_set_RGB(0, 32, 0, 0);
+	  led_set_RGB(1, 0, 32, 0);
 	  led_render_all();
+	  send_message_CAN();
 	  HAL_Delay(1000);
 	  HAL_UART_Transmit(&huart1, world, 5, 1);
 	  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_5);
 	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 300);
 	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 1600);
-	  led_set_RGB(0, 0, 0, 128);
-	  led_set_RGB(1, 64, 64, 64);
+	  led_set_RGB(0, 0, 0, 32);
+	  led_set_RGB(1, 16, 16, 16);
 	  led_render_all();
+	  send_usart1_CAN_mailbox();
 	  HAL_Delay(1000);
     /* USER CODE END WHILE */
 
@@ -536,6 +549,60 @@ void led_render_all() {
 	  }
   }
   HAL_TIM_PWM_Start_DMA(&htim3, TIM_CHANNEL_4, (uint32_t *)wr_buf, WRITE_BUF_LEN);
+}
+
+void setup_fillter_CAN(){
+	uint16_t filterID[4] = {0x000, 0x200, 0x400, 0x500};
+
+	filter.FilterIdHigh         = filterID[0] << 5;                        // フィルターID(上位16ビット)
+	filter.FilterIdLow          = filterID[1] << 5;                        // フィルターID(下位16ビット)
+	filter.FilterMaskIdHigh     = filterID[2] << 5;                        // フィルターマスク(上位16ビット)
+	filter.FilterMaskIdLow      = filterID[3] << 5;                        // フィルターマスク(下位16ビット)
+	filter.FilterScale          = CAN_FILTERSCALE_16BIT;    // フィルタースケール
+	filter.FilterFIFOAssignment = CAN_FILTER_FIFO0;         // フィルターに割り当てるFIFO
+	filter.FilterBank           = 0;                        // フィルターバンクNo
+	filter.FilterMode           = CAN_FILTERMODE_IDLIST;    // フィルターモード
+	filter.SlaveStartFilterBank = 14;                       // スレーブCANの開始フィルターバンクNo
+	filter.FilterActivation     = ENABLE;                   // フィルター無効／有効
+	HAL_CAN_ConfigFilter(&hcan, &filter);
+}
+
+int send_message_CAN(){
+	CAN_TxHeaderTypeDef TxHeader;
+	uint32_t TxMailbox;
+	uint8_t TxData[8];
+	if(0 < HAL_CAN_GetTxMailboxesFreeLevel(&hcan)){
+	    TxHeader.StdId = 0x000;                 // CAN ID
+	    TxHeader.RTR = CAN_RTR_DATA;            // フレームタイプはデータフレーム
+	    TxHeader.IDE = CAN_ID_STD;              // 標準ID(11ﾋﾞｯﾄ)
+	    TxHeader.DLC = 8;                       // データ長は8バイトに
+	    TxHeader.TransmitGlobalTime = DISABLE;  // ???
+	    TxData[0] = 0x11;
+	    TxData[1] = 0x22;
+	    TxData[2] = 0x33;
+	    TxData[3] = 0x44;
+	    TxData[4] = 0x55;
+	    TxData[5] = 0x66;
+	    TxData[6] = 0x77;
+	    TxData[7] = 0x88;
+	    HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox);
+	    return 0;
+	}
+	return 1;
+}
+
+void send_usart1_CAN_mailbox(){
+	CAN_RxHeaderTypeDef RxHeader;
+	uint32_t id;
+	uint32_t dlc;
+	uint8_t RxData[8] = "nnnnnnnn";
+	if (HAL_CAN_GetRxMessage(&hcan, CAN_RX_FIFO0, &RxHeader, RxData) == HAL_OK)
+	{
+		id = (RxHeader.IDE == CAN_ID_STD)? RxHeader.StdId : RxHeader.ExtId;     // ID
+		dlc = RxHeader.DLC;
+		HAL_UART_Transmit(&huart1, "Received", 8, 1);
+	}
+	HAL_UART_Transmit(&huart1, RxData, 8, 1);
 }
 /* USER CODE END 4 */
 
