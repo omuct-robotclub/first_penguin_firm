@@ -21,17 +21,16 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "ws2812double.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-const uint8_t PIXEL_PWM_LEN[] = { 22, 45 };
+const uint8_t PIXEL_PWM_LEN[] = { 22, 45 };	//period = 89
 
 // LED parameters
 #define NUM_BPP (3)
@@ -64,7 +63,6 @@ uint8_t rgb_arr[NUM_BYTES];
 // LED write buffer
 #define WRITE_BUF_LEN (DATA_LEN + RESET_TIME_LEN)
 uint8_t wr_buf[WRITE_BUF_LEN];
-uint_fast8_t wr_buf_p = 0;
 
 // CAN filter buffer
 CAN_FilterTypeDef filter;
@@ -122,11 +120,11 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_DMA_Init();
   MX_CAN_Init();
   MX_TIM1_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
+  MX_DMA_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
   setup_fillter_CAN();
@@ -529,6 +527,7 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
 void led_set_RGB(uint8_t index, uint8_t r, uint8_t g, uint8_t b) {
   rgb_arr[3 * index    ] = g;
   rgb_arr[3 * index + 1] = r;
@@ -554,16 +553,16 @@ void led_render_all() {
 void setup_fillter_CAN(){
 	uint16_t filterID[4] = {0x000, 0x200, 0x400, 0x500};
 
-	filter.FilterIdHigh         = filterID[0] << 5;                        // フィルターID(上位16ビット)
-	filter.FilterIdLow          = filterID[1] << 5;                        // フィルターID(下位16ビット)
-	filter.FilterMaskIdHigh     = filterID[2] << 5;                        // フィルターマスク(上位16ビット)
-	filter.FilterMaskIdLow      = filterID[3] << 5;                        // フィルターマスク(下位16ビット)
+	filter.FilterIdHigh         = filterID[0] << 5;                        // フィルターID(上�?16ビッ�?)
+	filter.FilterIdLow          = filterID[1] << 5;                        // フィルターID(下�?16ビッ�?)
+	filter.FilterMaskIdHigh     = filterID[2] << 5;                        // フィルターマスク(上�?16ビッ�?)
+	filter.FilterMaskIdLow      = filterID[3] << 5;                        // フィルターマスク(下�?16ビッ�?)
 	filter.FilterScale          = CAN_FILTERSCALE_16BIT;    // フィルタースケール
 	filter.FilterFIFOAssignment = CAN_FILTER_FIFO0;         // フィルターに割り当てるFIFO
 	filter.FilterBank           = 0;                        // フィルターバンクNo
-	filter.FilterMode           = CAN_FILTERMODE_IDLIST;    // フィルターモード
+	filter.FilterMode           = CAN_FILTERMODE_IDLIST;    // フィルターモー�?
 	filter.SlaveStartFilterBank = 14;                       // スレーブCANの開始フィルターバンクNo
-	filter.FilterActivation     = ENABLE;                   // フィルター無効／有効
+	filter.FilterActivation     = ENABLE;                   // フィルター無効?��有効
 	HAL_CAN_ConfigFilter(&hcan, &filter);
 }
 
@@ -573,9 +572,9 @@ int send_message_CAN(){
 	uint8_t TxData[8];
 	if(0 < HAL_CAN_GetTxMailboxesFreeLevel(&hcan)){
 	    TxHeader.StdId = 0x000;                 // CAN ID
-	    TxHeader.RTR = CAN_RTR_DATA;            // フレームタイプはデータフレーム
-	    TxHeader.IDE = CAN_ID_STD;              // 標準ID(11ﾋﾞｯﾄ)
-	    TxHeader.DLC = 8;                       // データ長は8バイトに
+	    TxHeader.RTR = CAN_RTR_DATA;            // フレー�?タイプ�?��?ータフレー�?
+	    TxHeader.IDE = CAN_ID_STD;              // 標準ID(11?��ﾞｯ?�?)
+	    TxHeader.DLC = 8;                       // �?ータ長は8バイトに
 	    TxHeader.TransmitGlobalTime = DISABLE;  // ???
 	    TxData[0] = 0x11;
 	    TxData[1] = 0x22;
