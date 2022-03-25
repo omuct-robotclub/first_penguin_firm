@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "ws2812double.h"
+#include "CAN303x8.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -30,14 +31,6 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-const uint8_t PIXEL_PWM_LEN[] = { 22, 45 };	//period = 89
-
-// LED parameters
-#define NUM_BPP (3)
-#define NUM_PIXELS (2)
-#define NUM_BYTES (NUM_BPP * NUM_PIXELS)
-#define DATA_LEN (NUM_BYTES * 8)
-#define RESET_TIME_LEN (1)
 
 /* USER CODE END PD */
 
@@ -57,12 +50,6 @@ DMA_HandleTypeDef hdma_tim3_ch4_up;
 UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
-// LED color buffer
-uint8_t rgb_arr[NUM_BYTES];
-
-// LED write buffer
-#define WRITE_BUF_LEN (DATA_LEN + RESET_TIME_LEN)
-uint8_t wr_buf[WRITE_BUF_LEN];
 
 // CAN filter buffer
 CAN_FilterTypeDef filter;
@@ -78,10 +65,6 @@ static void MX_TIM3_Init(void);
 static void MX_DMA_Init(void);
 static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
-void led_set_RGB(uint8_t index, uint8_t r, uint8_t g, uint8_t b);
-void led_set_all_RGB(uint8_t r, uint8_t g, uint8_t b);
-void led_render_all();
-
 void setup_fillter_CAN();
 int send_message_CAN();
 void send_usart1_CAN_mailbox();
@@ -149,9 +132,6 @@ int main(void)
 	  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_5);
 	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 1600);
 	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 300);
-//	  led_set_RGB(0, 32, 0, 0);
-//	  led_set_RGB(1, 0, 32, 0);
-//	  led_render_all();
 	  pixels.colors[0] = {32, 0, 0};
 	  pixels.colors[1] = {0, 32, 0};
 	  pixels.rend();
@@ -161,11 +141,8 @@ int main(void)
 	  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_5);
 	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 300);
 	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 1600);
-//	  led_set_RGB(0, 0, 0, 32);
-//	  led_set_RGB(1, 16, 16, 16);
-//	  led_render_all();
-	  pixels.colors[0] = {0, 0, 32};
-	  pixels.colors[1] = {16, 16, 16};
+	  pixels.colors[0] = {0, 0, 48};
+	  pixels.colors[1] = {16, 16, 32};
 	  pixels.rend();
 	  send_usart1_CAN_mailbox();
 	  HAL_Delay(1000);
@@ -536,28 +513,6 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
-void led_set_RGB(uint8_t index, uint8_t r, uint8_t g, uint8_t b) {
-  rgb_arr[3 * index    ] = g;
-  rgb_arr[3 * index + 1] = r;
-  rgb_arr[3 * index + 2] = b;
-}
-
-void led_set_all_RGB(uint8_t r, uint8_t g, uint8_t b) {
-  for(uint_fast8_t i = 0; i < NUM_PIXELS; i++) led_set_RGB(i, r, g, b);
-}
-
-void led_render_all() {
-  if(hdma_tim3_ch4_up.State != HAL_DMA_STATE_READY) {
-    HAL_TIM_PWM_Stop_DMA(&htim3, TIM_CHANNEL_4);
-  }
-  for(uint_fast8_t i = 0; i < NUM_BYTES; i++) {
-	  for(uint_fast8_t j = 0; j < 8; j++){
-		wr_buf[i * 8 + j] = PIXEL_PWM_LEN[((rgb_arr[i] << j) & 0b10000000) > 0];
-	  }
-  }
-  HAL_TIM_PWM_Start_DMA(&htim3, TIM_CHANNEL_4, (uint32_t *)wr_buf, WRITE_BUF_LEN);
-}
-
 void setup_fillter_CAN(){
 	uint16_t filterID[4] = {0x000, 0x200, 0x400, 0x500};
 
@@ -569,7 +524,7 @@ void setup_fillter_CAN(){
 	filter.FilterFIFOAssignment = CAN_FILTER_FIFO0;         // フィルターに割り当てるFIFO
 	filter.FilterBank           = 0;                        // フィルターバンクNo
 	filter.FilterMode           = CAN_FILTERMODE_IDLIST;    // フィルターモー�?
-	filter.SlaveStartFilterBank = 14;                       // スレーブCANの開始フィルターバンクNo
+	filter.SlaveStartFilterBank = 0;                       // スレーブCANの開始フィルターバンクNo
 	filter.FilterActivation     = ENABLE;                   // フィルター無効?��有効
 	HAL_CAN_ConfigFilter(&hcan, &filter);
 }

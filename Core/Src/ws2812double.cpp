@@ -16,7 +16,7 @@ void ws2812_double::update_write_buffer(){
 							: 	(j == 1) ? ws2812_double::colors[i].red
 							: 	(j == 2) ? ws2812_double::colors[i].blue : 0;
 			for(uint8_t k = 0; k < byte; k++){
-				ws2812_double::write_buffer[(i * color_num + j) * byte + k] = ((color >> (byte -1 + k)) & 1) && 1 ? ws2812_double::high : ws2812_double::low;
+				ws2812_double::write_buffer[(i * color_num + j) * byte + k] = ((color & (0x80 >> k)) > 0) ? ws2812_double::high : ws2812_double::low;
 			}
 		}
 	}

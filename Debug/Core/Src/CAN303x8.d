@@ -1,5 +1,4 @@
-Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_can.o: \
- ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_can.c \
+Core/Src/CAN303x8.o: ../Core/Src/CAN303x8.cpp ../Core/Src/CAN303x8.h \
  ../Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal.h \
  ../Core/Inc/stm32f3xx_hal_conf.h \
  ../Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_rcc.h \
@@ -30,6 +29,7 @@ Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_can.o: \
  ../Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_tim_ex.h \
  ../Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_uart.h \
  ../Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_uart_ex.h
+../Core/Src/CAN303x8.h:
 ../Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal.h:
 ../Core/Inc/stm32f3xx_hal_conf.h:
 ../Drivers/STM32F3xx_HAL_Driver/Inc/stm32f3xx_hal_rcc.h:
