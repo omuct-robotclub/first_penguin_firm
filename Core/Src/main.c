@@ -110,18 +110,21 @@ int main(void)
   MX_TIM3_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-  setup_fillter_CAN();
-  HAL_CAN_Start(&hcan);
+  // setup_fillter_CAN();
+  // HAL_CAN_Start(&hcan);
 
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
   HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
   HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_2);
 
+  stm_CAN::CAN_303x8 can(&hcan);
   ws2812::ws2812_double pixels(&htim3, TIM_CHANNEL_4, &hdma_tim3_ch4_up, 45, 22);
 
   uint8_t hello[] = "hello";
   uint8_t world[] = "world";
+
+  can.subscribe_message(0x500, stm_CAN::ID_type::std, stm_CAN::Frame_type::data, stm_CAN::FIFO::_0);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -135,7 +138,9 @@ int main(void)
 	  pixels.colors[0] = {32, 0, 0};
 	  pixels.colors[1] = {0, 32, 0};
 	  pixels.rend();
-	  send_message_CAN();
+    uint8_t data[] = "01234567";
+    can.send(0x500, stm_CAN::ID_type::std, stm_CAN::Frame_type::data, data, 8);
+	  //send_message_CAN();
 	  HAL_Delay(1000);
 	  HAL_UART_Transmit(&huart1, world, 5, 1);
 	  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_5);
@@ -144,7 +149,20 @@ int main(void)
 	  pixels.colors[0] = {0, 0, 48};
 	  pixels.colors[1] = {16, 16, 32};
 	  pixels.rend();
-	  send_usart1_CAN_mailbox();
+    uint8_t data[8];
+    switch (can.read(stm_CAN::FIFO::_0, data)){
+      case stm_CAN::read_retval::message_received:
+      case stm_CAN::read_retval::more_message_received:
+        uint8_t received[] = "received ";
+        uint8_t cr_lf[] = "\r\n";
+        HAL_UART_Transmit(&huart1, received, 9, 1);
+        HAL_UART_Transmit(&huart1, data, 8, 1);
+        HAL_UART_Transmit(&huart1, cr_lf, 2, 1);
+        break;
+      default:
+        break;
+    }
+	  // send_usart1_CAN_mailbox();
 	  HAL_Delay(1000);
     /* USER CODE END WHILE */
 
