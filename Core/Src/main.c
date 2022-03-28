@@ -65,9 +65,7 @@ static void MX_TIM3_Init(void);
 static void MX_DMA_Init(void);
 static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
-void setup_fillter_CAN();
-int send_message_CAN();
-void send_usart1_CAN_mailbox();
+void CAN_read(stm_CAN::CAN_303x8* can,uint8_t* data, stm_CAN::FIFO fifo);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -110,8 +108,6 @@ int main(void)
   MX_TIM3_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
-  // setup_fillter_CAN();
-  // HAL_CAN_Start(&hcan);
 
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
   HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1);
@@ -121,49 +117,46 @@ int main(void)
   stm_CAN::CAN_303x8 can(&hcan);
   ws2812::ws2812_double pixels(&htim3, TIM_CHANNEL_4, &hdma_tim3_ch4_up, 45, 22);
 
-  uint8_t hello[] = "hello";
-  uint8_t world[] = "world";
+  const ws2812::color _orenge = {48, 24, 0};
+  const ws2812::color _blue = {0, 48, 128};
+  const ws2812::color _green = {0, 48, 0};
+  const ws2812::color _purple = {24, 0, 72};
+  const ws2812::color _white = {12, 16, 32};
+  const ws2812::color _full = {255, 255, 255};
 
-  can.subscribe_message(0x500, stm_CAN::ID_type::std, stm_CAN::Frame_type::data, stm_CAN::FIFO::_0);
+  //note : 	subscribe control messages for stm_CAN::FIFO::_0
+  //		subscribe data message for stm_CAN::FIFO::_1
+  //		control message : 	0x00 (std) and ID for motor driver (0x01? (ext)) and original ID (ext)
+  //		data message    :	initialized and added from control message
+  can.subscribe_message(0x00, stm_CAN::ID_type::std, stm_CAN::Frame_type::data, stm_CAN::FIFO::_0);
+  can.subscribe_message(0x20, stm_CAN::ID_type::ext, stm_CAN::Frame_type::data, stm_CAN::FIFO::_0);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  HAL_UART_Transmit(&huart1, hello, 5, 1);
-	  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_5);
+	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5,GPIO_PIN_RESET);
 	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 1600);
 	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 300);
-	  pixels.colors[0] = {32, 0, 0};
-	  pixels.colors[1] = {0, 32, 0};
+	  pixels.colors[0] = _green;
+	  pixels.colors[1] = _green;
 	  pixels.rend();
-    uint8_t data[] = "01234567";
-    can.send(0x500, stm_CAN::ID_type::std, stm_CAN::Frame_type::data, data, 8);
-	  //send_message_CAN();
-	  HAL_Delay(1000);
-	  HAL_UART_Transmit(&huart1, world, 5, 1);
-	  HAL_GPIO_TogglePin(GPIOB, GPIO_PIN_5);
+    uint8_t data1[] = "01234567";
+    uint8_t data2[] = "76543210";
+    can.send(0x00, stm_CAN::ID_type::std, stm_CAN::Frame_type::data, data1, 8);
+    can.send(0x20, stm_CAN::ID_type::ext, stm_CAN::Frame_type::data, data2, 8);
+	  HAL_Delay(100);
+	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5,GPIO_PIN_RESET);
 	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 300);
 	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 1600);
-	  pixels.colors[0] = {0, 0, 48};
-	  pixels.colors[1] = {16, 16, 32};
+	  pixels.colors[0] = _green;
+	  pixels.colors[1] = _green;
 	  pixels.rend();
-    uint8_t data[8];
-    switch (can.read(stm_CAN::FIFO::_0, data)){
-      case stm_CAN::read_retval::message_received:
-      case stm_CAN::read_retval::more_message_received:
-        uint8_t received[] = "received ";
-        uint8_t cr_lf[] = "\r\n";
-        HAL_UART_Transmit(&huart1, received, 9, 1);
-        HAL_UART_Transmit(&huart1, data, 8, 1);
-        HAL_UART_Transmit(&huart1, cr_lf, 2, 1);
-        break;
-      default:
-        break;
-    }
-	  // send_usart1_CAN_mailbox();
-	  HAL_Delay(1000);
+	  uint8_t data[8];
+	  CAN_read(&can, data, stm_CAN::FIFO::_0);
+	  CAN_read(&can, data, stm_CAN::FIFO::_1);
+	  HAL_Delay(100);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -440,7 +433,7 @@ static void MX_TIM3_Init(void)
   sConfigOC.OCMode = TIM_OCMODE_PWM1;
   sConfigOC.Pulse = 0;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+  sConfigOC.OCFastMode = TIM_OCFAST_ENABLE;
   if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
   {
     Error_Handler();
@@ -530,59 +523,22 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
-void setup_fillter_CAN(){
-	uint16_t filterID[4] = {0x000, 0x200, 0x400, 0x500};
-
-	filter.FilterIdHigh         = filterID[0] << 5;                        // フィルターID(上�?16ビッ�?)
-	filter.FilterIdLow          = filterID[1] << 5;                        // フィルターID(下�?16ビッ�?)
-	filter.FilterMaskIdHigh     = filterID[2] << 5;                        // フィルターマスク(上�?16ビッ�?)
-	filter.FilterMaskIdLow      = filterID[3] << 5;                        // フィルターマスク(下�?16ビッ�?)
-	filter.FilterScale          = CAN_FILTERSCALE_16BIT;    // フィルタースケール
-	filter.FilterFIFOAssignment = CAN_FILTER_FIFO0;         // フィルターに割り当てるFIFO
-	filter.FilterBank           = 0;                        // フィルターバンクNo
-	filter.FilterMode           = CAN_FILTERMODE_IDLIST;    // フィルターモー�?
-	filter.SlaveStartFilterBank = 0;                       // スレーブCANの開始フィルターバンクNo
-	filter.FilterActivation     = ENABLE;                   // フィルター無効?��有効
-	HAL_CAN_ConfigFilter(&hcan, &filter);
-}
-
-int send_message_CAN(){
-	CAN_TxHeaderTypeDef TxHeader;
-	uint32_t TxMailbox;
-	uint8_t TxData[8];
-	if(0 < HAL_CAN_GetTxMailboxesFreeLevel(&hcan)){
-	    TxHeader.StdId = 0x000;                 // CAN ID
-	    TxHeader.RTR = CAN_RTR_DATA;            // フレー�?タイプ�?��?ータフレー�?
-	    TxHeader.IDE = CAN_ID_STD;              // 標準ID(11?��ﾞｯ?�?)
-	    TxHeader.DLC = 8;                       // �?ータ長は8バイトに
-	    TxHeader.TransmitGlobalTime = DISABLE;  // ???
-	    TxData[0] = 0x11;
-	    TxData[1] = 0x22;
-	    TxData[2] = 0x33;
-	    TxData[3] = 0x44;
-	    TxData[4] = 0x55;
-	    TxData[5] = 0x66;
-	    TxData[6] = 0x77;
-	    TxData[7] = 0x88;
-	    HAL_CAN_AddTxMessage(&hcan, &TxHeader, TxData, &TxMailbox);
-	    return 0;
+void CAN_read(stm_CAN::CAN_303x8* can, uint8_t* data, stm_CAN::FIFO fifo){
+  uint8_t received[] = "received ";
+  uint8_t cr_lf[] = "\r\n";
+  uint8_t err[] = "error\r\n";
+	switch (can->read(fifo, data)){
+	      case stm_CAN::read_retval::message_received:
+	      case stm_CAN::read_retval::more_message_received:
+	        HAL_UART_Transmit(&huart1, received, 9, 1);
+	        HAL_UART_Transmit(&huart1, data, 8, 1);
+	        HAL_UART_Transmit(&huart1, cr_lf, 2, 1);
+	        break;
+	      case stm_CAN::read_retval::error:
+	    	  HAL_UART_Transmit(&huart1, err, 7,1);
+	      case stm_CAN::read_retval::no_message:
+	        break;
 	}
-	return 1;
-}
-
-void send_usart1_CAN_mailbox(){
-	CAN_RxHeaderTypeDef RxHeader;
-	uint32_t id;
-	uint32_t dlc;
-	uint8_t RxData[] = "nnnnnnnn";
-	if (HAL_CAN_GetRxMessage(&hcan, CAN_RX_FIFO0, &RxHeader, RxData) == HAL_OK)
-	{
-		id = (RxHeader.IDE == CAN_ID_STD)? RxHeader.StdId : RxHeader.ExtId;     // ID
-		dlc = RxHeader.DLC;
-		HAL_UART_Transmit(&huart1, (uint8_t*)"Received", 8, 1);
-	}
-	HAL_UART_Transmit(&huart1, RxData, 8, 1);
 }
 /* USER CODE END 4 */
 

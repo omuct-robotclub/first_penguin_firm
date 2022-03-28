@@ -20,6 +20,7 @@ void ws2812_double::update_write_buffer(){
 			}
 		}
 	}
+	ws2812_double::write_buffer[data_len] = 0;
 }
 
 void ws2812_double::rend(){
