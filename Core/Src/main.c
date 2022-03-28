@@ -128,8 +128,10 @@ int main(void)
   //		subscribe data message for stm_CAN::FIFO::_1
   //		control message : 	0x00 (std) and ID for motor driver (0x01? (ext)) and original ID (ext)
   //		data message    :	initialized and added from control message
+  const uint32_t original_id = 0x0100;
   can.subscribe_message(0x00, stm_CAN::ID_type::std, stm_CAN::Frame_type::data, stm_CAN::FIFO::_0);
-  can.subscribe_message(0x20, stm_CAN::ID_type::ext, stm_CAN::Frame_type::data, stm_CAN::FIFO::_0);
+  can.subscribe_message(0x01, stm_CAN::ID_type::ext, stm_CAN::Frame_type::data, stm_CAN::FIFO::_0);
+  can.subscribe_message(original_id, stm_CAN::ID_type::ext, stm_CAN::Frame_type::data, stm_CAN::FIFO::_0);
   /* USER CODE END 2 */
 
   /* Infinite loop */
