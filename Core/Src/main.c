@@ -141,8 +141,8 @@ int main(void)
 	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5,GPIO_PIN_RESET);
 	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 1600);
 	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 300);
-	  pixels.colors[0] = _green;
-	  pixels.colors[1] = _green;
+	  pixels.colors[0] = _white;
+	  pixels.colors[1] = _white;
 	  pixels.rend();
     uint8_t data1[] = "01234567";
     uint8_t data2[] = "76543210";
@@ -152,8 +152,8 @@ int main(void)
 	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5,GPIO_PIN_RESET);
 	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 300);
 	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 1600);
-	  pixels.colors[0] = _green;
-	  pixels.colors[1] = _green;
+	  pixels.colors[0] = _white;
+	  pixels.colors[1] = _white;
 	  pixels.rend();
 	  uint8_t data[8];
 	  CAN_read(&can, data, stm_CAN::FIFO::_0);
