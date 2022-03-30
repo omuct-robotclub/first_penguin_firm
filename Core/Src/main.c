@@ -66,6 +66,7 @@ static void MX_DMA_Init(void);
 static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 void CAN_read(stm_CAN::CAN_303x8* can,uint8_t* data, stm_CAN::FIFO fifo);
+void write_PWM(TIM_HandleTypeDef* htim, uint32_t channel1, uint32_t channel2, int16_t val);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -114,6 +115,12 @@ int main(void)
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
   HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_2);
 
+  enum state{
+    STATE_RUNNING,
+    STATE_STOPPED,
+  } state = STATE_STOPPED;
+  int16_t output_value = 0;
+  uint8_t spnum = 0;  //specify number of recieved data to drive
   stm_CAN::CAN_303x8 can(&hcan);
   ws2812::ws2812_double pixels(&htim3, TIM_CHANNEL_4, &hdma_tim3_ch4_up, 45, 22);
 
@@ -138,27 +145,98 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5,GPIO_PIN_RESET);
-	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 1600);
-	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 300);
-	  pixels.colors[0] = _white;
-	  pixels.colors[1] = _white;
-	  pixels.rend();
-    uint8_t data1[] = "01234567";
-    uint8_t data2[] = "76543210";
-    can.send(0x00, stm_CAN::ID_type::std, stm_CAN::Frame_type::data, data1, 8);
-    can.send(0x20, stm_CAN::ID_type::ext, stm_CAN::Frame_type::data, data2, 8);
-	  HAL_Delay(100);
-	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5,GPIO_PIN_RESET);
-	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 300);
-	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 1600);
-	  pixels.colors[0] = _white;
-	  pixels.colors[1] = _white;
-	  pixels.rend();
-	  uint8_t data[8];
-	  CAN_read(&can, data, stm_CAN::FIFO::_0);
-	  CAN_read(&can, data, stm_CAN::FIFO::_1);
-	  HAL_Delay(100);
+
+    uint8_t data_command[8];
+    if(CAN_read(&can, data_command, stm_CAN::FIFO::_0)){
+      switch (data_cammand[0])
+      {
+      case 0x00:  //stop
+        state = state::STATE_STOPPED;
+        break;
+      case 0x01:  //start
+        state = state::STATE_RUNNING;
+        break;
+      case 0x02:  //reset
+        HAL_NVIC_SystemReset();
+        state = state::STATE_STOPPED;
+        break;
+      case 0x03:  //get original id
+        {
+          uint8_t data_response[4];
+          for( uint8_t i = 0; i < 4; i++){
+            data_response[i] = (original_id >> (i*8)) & 0xFF;
+          }
+          can.send(
+          (data_command[1]) | (data_command[2] << 8),
+          stm_CAN::ID_type::std,
+          stm_CAN::Frame_type::data,
+          data_response,
+          4,
+          );
+        }
+        break;
+      case 0x04:  //set data id
+        can.subscribe_message(
+          (data_command[1]) | (data_command[2] << 8), 
+          stm_CAN::ID_type::std, 
+          stm_CAN::Frame_type::data, 
+          stm_CAN::FIFO::_1);
+        spnum = data_command[3];
+        break;
+      case 0x05:  //set pwm
+        output_value = (data_command[1]) | (data_command[2] << 8);
+        break;
+      
+      default:
+        break;
+      }
+    }
+    uint8_t data_drive[8];
+    if(CAN_read(&can, data_drive, stm_CAN::FIFO::_1)){
+      output_value = (data_drive[spnum*2] << (spnum*2*8)) | (data_drive[spnum*2 + 1] << (spnum*2*8 + 8));
+    }
+
+    switch (state)
+    {
+    case state::STATE_STOPPED:
+      HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_SET);
+      write_PWM(&htim1, TIM_CHANNEL_1, TIM_CHANNEL_2, 0);
+      pixels.colors[0] = _purple;
+      pixels.colors[1] = _purple;
+      pixels.rend();
+      break;
+    case state::STATE_RUNNING:
+      HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);
+      write_PWM(&htim1, TIM_CHANNEL_1, TIM_CHANNEL_2, output_value);
+      pixels.colors[0] = (output_value > 0)? _orenge : (output_value = 0)? _white : _blue;
+      pixels.colors[1] = _white;
+      pixels.rend();
+      break;
+    }
+    //test
+	  // []() {
+    //   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5,GPIO_PIN_RESET);
+	  // __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 1600);
+	  // __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 300);
+	  // pixels.colors[0] = _white;
+	  // pixels.colors[1] = _white;
+	  // pixels.rend();
+    // uint8_t data1[] = "01234567";
+    // uint8_t data2[] = "76543210";
+    // can.send(0x00, stm_CAN::ID_type::std, stm_CAN::Frame_type::data, data1, 8);
+    // can.send(0x20, stm_CAN::ID_type::ext, stm_CAN::Frame_type::data, data2, 8);
+	  // HAL_Delay(100);
+	  // HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5,GPIO_PIN_RESET);
+	  // __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 300);
+	  // __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 1600);
+	  // pixels.colors[0] = _white;
+	  // pixels.colors[1] = _white;
+	  // pixels.rend();
+	  // uint8_t data[8];
+	  // CAN_read(&can, data, stm_CAN::FIFO::_0);
+	  // CAN_read(&can, data, stm_CAN::FIFO::_1);
+	  // HAL_Delay(100);
+    // } ();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -525,7 +603,7 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-void CAN_read(stm_CAN::CAN_303x8* can, uint8_t* data, stm_CAN::FIFO fifo){
+int CAN_read(stm_CAN::CAN_303x8* can, uint8_t* data, stm_CAN::FIFO fifo){
   uint8_t received[] = "received ";
   uint8_t cr_lf[] = "\r\n";
   uint8_t err[] = "error\r\n";
@@ -535,12 +613,19 @@ void CAN_read(stm_CAN::CAN_303x8* can, uint8_t* data, stm_CAN::FIFO fifo){
 	        HAL_UART_Transmit(&huart1, received, 9, 1);
 	        HAL_UART_Transmit(&huart1, data, 8, 1);
 	        HAL_UART_Transmit(&huart1, cr_lf, 2, 1);
-	        break;
+	        return 1;
 	      case stm_CAN::read_retval::error:
 	    	  HAL_UART_Transmit(&huart1, err, 7,1);
 	      case stm_CAN::read_retval::no_message:
-	        break;
+	        return 0;
 	}
+}
+
+void write_PWM(TIM_HandleTypeDef* htim, uint32_t channel1, uint32_t channel2, int16_t val){
+  uint16_t clamp_unsigned = [](int16_t v){return (v > 0)? v : 0)};
+  __HAL_TIM_SET_COMPARE(htim, channel1, clamp_unsigned(val) >> 3);
+  __HAL_TIM_SET_COMPARE(htim, channel2, clamp_unsigned(-val) >> 3);
+  return;
 }
 /* USER CODE END 4 */
 
