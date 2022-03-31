@@ -65,7 +65,7 @@ static void MX_TIM3_Init(void);
 static void MX_DMA_Init(void);
 static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
-void CAN_read(stm_CAN::CAN_303x8* can,uint8_t* data, stm_CAN::FIFO fifo);
+int CAN_read(stm_CAN::CAN_303x8* can,uint8_t* data, stm_CAN::FIFO fifo);
 void write_PWM(TIM_HandleTypeDef* htim, uint32_t channel1, uint32_t channel2, int16_t val);
 /* USER CODE END PFP */
 
@@ -139,16 +139,9 @@ int main(void)
   can.subscribe_message(0x00, stm_CAN::ID_type::std, stm_CAN::Frame_type::data, stm_CAN::FIFO::_0);
   can.subscribe_message(0x01, stm_CAN::ID_type::ext, stm_CAN::Frame_type::data, stm_CAN::FIFO::_0);
   can.subscribe_message(original_id, stm_CAN::ID_type::ext, stm_CAN::Frame_type::data, stm_CAN::FIFO::_0);
-  /* USER CODE END 2 */
 
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-
-    uint8_t data_command[8];
-    if(CAN_read(&can, data_command, stm_CAN::FIFO::_0)){
-      switch (data_cammand[0])
+  auto process_data = [&](uint8_t* data){
+    switch (data[0])
       {
       case 0x00:  //stop
         state = state::STATE_STOPPED;
@@ -167,29 +160,41 @@ int main(void)
             data_response[i] = (original_id >> (i*8)) & 0xFF;
           }
           can.send(
-          (data_command[1]) | (data_command[2] << 8),
+          (data[1]) | (data[2] << 8),
           stm_CAN::ID_type::std,
           stm_CAN::Frame_type::data,
           data_response,
-          4,
+          4
           );
         }
         break;
       case 0x04:  //set data id
         can.subscribe_message(
-          (data_command[1]) | (data_command[2] << 8), 
+          (data[1]) | (data[2] << 8), 
           stm_CAN::ID_type::std, 
           stm_CAN::Frame_type::data, 
           stm_CAN::FIFO::_1);
-        spnum = data_command[3];
+        spnum = data[3];
         break;
       case 0x05:  //set pwm
-        output_value = (data_command[1]) | (data_command[2] << 8);
+        output_value = (data[1]) | (data[2] << 8);
         break;
       
       default:
         break;
       }
+    return;
+  };
+  /* USER CODE END 2 */
+
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
+  while (1)
+  {
+
+    uint8_t data_command[8];
+    if(CAN_read(&can, data_command, stm_CAN::FIFO::_0)){
+      process_data(data_command);
     }
     uint8_t data_drive[8];
     if(CAN_read(&can, data_drive, stm_CAN::FIFO::_1)){
@@ -208,35 +213,20 @@ int main(void)
     case state::STATE_RUNNING:
       HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);
       write_PWM(&htim1, TIM_CHANNEL_1, TIM_CHANNEL_2, output_value);
-      pixels.colors[0] = (output_value > 0)? _orenge : (output_value = 0)? _white : _blue;
+      pixels.colors[0] = (output_value > 0)? _blue : (output_value == 0)? _white : _orenge;
       pixels.colors[1] = _white;
       pixels.rend();
       break;
     }
+    HAL_Delay(1);
+
     //test
-	  // []() {
-    //   HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5,GPIO_PIN_RESET);
-	  // __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 1600);
-	  // __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 300);
-	  // pixels.colors[0] = _white;
-	  // pixels.colors[1] = _white;
-	  // pixels.rend();
-    // uint8_t data1[] = "01234567";
-    // uint8_t data2[] = "76543210";
-    // can.send(0x00, stm_CAN::ID_type::std, stm_CAN::Frame_type::data, data1, 8);
-    // can.send(0x20, stm_CAN::ID_type::ext, stm_CAN::Frame_type::data, data2, 8);
-	  // HAL_Delay(100);
-	  // HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5,GPIO_PIN_RESET);
-	  // __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 300);
-	  // __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_2, 1600);
-	  // pixels.colors[0] = _white;
-	  // pixels.colors[1] = _white;
-	  // pixels.rend();
-	  // uint8_t data[8];
-	  // CAN_read(&can, data, stm_CAN::FIFO::_0);
-	  // CAN_read(&can, data, stm_CAN::FIFO::_1);
-	  // HAL_Delay(100);
-    // } ();
+//	   [&]() {
+//    uint8_t send_data1[] = {0x01};
+//    can.send(0x00, stm_CAN::ID_type::std, stm_CAN::Frame_type::data, send_data1, 1);
+//    uint8_t send_data2[3] = {0x05, 0x00, 0x81};
+//    can.send(0x00, stm_CAN::ID_type::std, stm_CAN::Frame_type::data, send_data2, 3);
+//     } ();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -308,7 +298,7 @@ static void MX_CAN_Init(void)
   /* USER CODE END CAN_Init 1 */
   hcan.Instance = CAN;
   hcan.Init.Prescaler = 2;
-  hcan.Init.Mode = CAN_MODE_LOOPBACK;
+  hcan.Init.Mode = CAN_MODE_NORMAL;
   hcan.Init.SyncJumpWidth = CAN_SJW_1TQ;
   hcan.Init.TimeSeg1 = CAN_BS1_14TQ;
   hcan.Init.TimeSeg2 = CAN_BS2_3TQ;
@@ -622,7 +612,7 @@ int CAN_read(stm_CAN::CAN_303x8* can, uint8_t* data, stm_CAN::FIFO fifo){
 }
 
 void write_PWM(TIM_HandleTypeDef* htim, uint32_t channel1, uint32_t channel2, int16_t val){
-  uint16_t clamp_unsigned = [](int16_t v){return (v > 0)? v : 0)};
+  auto clamp_unsigned = [](int16_t v){return (v > 0)? v : 0;};
   __HAL_TIM_SET_COMPARE(htim, channel1, clamp_unsigned(val) >> 3);
   __HAL_TIM_SET_COMPARE(htim, channel2, clamp_unsigned(-val) >> 3);
   return;
