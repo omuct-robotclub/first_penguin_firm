@@ -31,7 +31,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+//#define debug
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -185,6 +185,13 @@ int main(void)
       }
     return;
   };
+
+
+  //test sending data	you can change below data in debug mode
+#ifdef debug
+  uint8_t test_command = 01;
+  int16_t test_PWM = 0;
+#endif
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -221,12 +228,14 @@ int main(void)
     HAL_Delay(1);
 
     //test
-//	   [&]() {
-//    uint8_t send_data1[] = {0x01};
-//    can.send(0x00, stm_CAN::ID_type::std, stm_CAN::Frame_type::data, send_data1, 1);
-//    uint8_t send_data2[3] = {0x05, 0x00, 0x81};
-//    can.send(0x00, stm_CAN::ID_type::std, stm_CAN::Frame_type::data, send_data2, 3);
-//     } ();
+#ifdef debug
+	   [&]() {
+    uint8_t send_data1[] = {test_command};
+    can.send(0x00, stm_CAN::ID_type::std, stm_CAN::Frame_type::data, send_data1, 1);
+    uint8_t send_data2[3] = {0x05, (test_PWM) & 0xff, (test_PWM >> 8) & 0xff};
+    can.send(0x00, stm_CAN::ID_type::std, stm_CAN::Frame_type::data, send_data2, 3);
+     } ();
+#endif
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -313,7 +322,24 @@ static void MX_CAN_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN CAN_Init 2 */
-
+#ifdef debug
+  hcan.Instance = CAN;
+  hcan.Init.Prescaler = 2;
+  hcan.Init.Mode = CAN_MODE_LOOPBACK;
+  hcan.Init.SyncJumpWidth = CAN_SJW_1TQ;
+  hcan.Init.TimeSeg1 = CAN_BS1_14TQ;
+  hcan.Init.TimeSeg2 = CAN_BS2_3TQ;
+  hcan.Init.TimeTriggeredMode = DISABLE;
+  hcan.Init.AutoBusOff = DISABLE;
+  hcan.Init.AutoWakeUp = DISABLE;
+  hcan.Init.AutoRetransmission = DISABLE;
+  hcan.Init.ReceiveFifoLocked = DISABLE;
+  hcan.Init.TransmitFifoPriority = DISABLE;
+  if (HAL_CAN_Init(&hcan) != HAL_OK)
+  {
+    Error_Handler();
+  }
+#endif
   /* USER CODE END CAN_Init 2 */
 
 }
