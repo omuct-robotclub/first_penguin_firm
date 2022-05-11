@@ -9,6 +9,6 @@
 ../Core/Src/main.c:582:13:void MX_DMA_Init()	16	static
 ../Core/Src/main.c:600:13:void MX_GPIO_Init()	40	static
 ../Core/Src/main.c:622:5:int CAN_read(stm_CAN::CAN_303x8*, uint8_t*, stm_CAN::FIFO)	48	static
-../Core/Src/main.c:641:25:write_PWM(TIM_HandleTypeDef*, uint32_t, uint32_t, int16_t)::<lambda(int16_t)>	16	static
-../Core/Src/main.c:640:6:void write_PWM(TIM_HandleTypeDef*, uint32_t, uint32_t, int16_t)	32	static
-../Core/Src/main.c:652:6:void Error_Handler()	4	static,ignoring_inline_asm
+../Core/Src/main.c:642:25:write_PWM(TIM_HandleTypeDef*, uint32_t, uint32_t, int16_t)::<lambda(int16_t)>	16	static
+../Core/Src/main.c:641:6:void write_PWM(TIM_HandleTypeDef*, uint32_t, uint32_t, int16_t)	32	static
+../Core/Src/main.c:653:6:void Error_Handler()	4	static,ignoring_inline_asm

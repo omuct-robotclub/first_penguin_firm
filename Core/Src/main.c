@@ -124,12 +124,12 @@ int main(void)
   stm_CAN::CAN_303x8 can(&hcan);
   ws2812::ws2812_double pixels(&htim3, TIM_CHANNEL_4, &hdma_tim3_ch4_up, 45, 22);
 
-  const ws2812::color _orenge = {48, 24, 0};
-  const ws2812::color _blue = {0, 48, 128};
-  const ws2812::color _green = {0, 48, 0};
-  const ws2812::color _purple = {24, 0, 72};
-  const ws2812::color _white = {12, 16, 32};
-  const ws2812::color _full = {255, 255, 255};
+  ws2812::color _orenge = {48, 24, 0};
+  ws2812::color _blue = {0, 48, 128};
+  ws2812::color _green = {0, 48, 0};
+  ws2812::color _purple = {24, 0, 72};
+  ws2812::color _white = {12, 16, 32};
+  ws2812::color _full = {255, 255, 255};
 
   //note : 	subscribe control messages for stm_CAN::FIFO::_0
   //		subscribe data message for stm_CAN::FIFO::_1
@@ -633,6 +633,7 @@ int CAN_read(stm_CAN::CAN_303x8* can, uint8_t* data, stm_CAN::FIFO fifo){
 	      case stm_CAN::read_retval::error:
 	    	  HAL_UART_Transmit(&huart1, err, 7,1);
 	      case stm_CAN::read_retval::no_message:
+	      default:
 	        return 0;
 	}
 }

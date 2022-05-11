@@ -1,0 +1,5 @@
+../Core/Src/main.c:251:6:void SystemClock_Config()	96	static,ignoring_inline_asm
+../Core/Src/main.c:622:5:int CAN_read(stm_CAN::CAN_303x8*, uint8_t*, stm_CAN::FIFO)	40	static
+../Core/Src/main.c:641:6:void write_PWM(TIM_HandleTypeDef*, uint32_t, uint32_t, int16_t)	8	static
+../Core/Src/main.c:653:6:void Error_Handler()	0	static,ignoring_inline_asm
+../Core/Src/main.c:81:5:int main()	328	static,ignoring_inline_asm
