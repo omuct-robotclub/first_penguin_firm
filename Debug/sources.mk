@@ -1,6 +1,6 @@
 ################################################################################
 # Automatically-generated file. Do not edit!
-# Toolchain: GNU Tools for STM32 (10.3-2021.10)
+# Toolchain: ARM_none-eabi_AUR_bin
 ################################################################################
 
 ELF_SRCS := 
@@ -18,6 +18,7 @@ OBJDUMP_LIST :=
 C_UPPER_DEPS := 
 S_DEPS := 
 C_DEPS := 
+OBJCOPY_BIN := 
 CC_DEPS := 
 SIZE_OUTPUT := 
 C++_DEPS := 

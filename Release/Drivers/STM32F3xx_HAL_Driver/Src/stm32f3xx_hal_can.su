@@ -6,13 +6,13 @@
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_can.c:1040:19:HAL_CAN_Stop	16	static
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_can.c:459:19:HAL_CAN_DeInit	8	static
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_can.c:1095:19:HAL_CAN_RequestSleep	0	static
-../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_can.c:1126:19:HAL_CAN_WakeUp	8	static
+../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_can.c:1126:19:HAL_CAN_WakeUp	16	static
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_can.c:1175:10:HAL_CAN_IsSleepActive	0	static
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_can.c:1206:19:HAL_CAN_AddTxMessage	20	static
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_can.c:1314:19:HAL_CAN_AbortTxRequest	0	static
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_can.c:1363:10:HAL_CAN_GetTxMailboxesFreeLevel	0	static
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_can.c:1406:10:HAL_CAN_IsTxMessagePending	0	static
-../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_can.c:1438:10:HAL_CAN_GetTxTimestamp	0	static,ignoring_inline_asm
+../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_can.c:1438:10:HAL_CAN_GetTxTimestamp	0	static
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_can.c:1472:19:HAL_CAN_GetRxMessage	20	static
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_can.c:1562:10:HAL_CAN_GetRxFifoFillLevel	0	static
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_can.c:1615:19:HAL_CAN_ActivateNotification	0	static

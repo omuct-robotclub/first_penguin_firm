@@ -32,9 +32,9 @@
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:3205:13:HAL_TIM_Encoder_MspDeInit	0	static
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:3145:19:HAL_TIM_Encoder_DeInit	8	static
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:3225:19:HAL_TIM_Encoder_Start	12	static
-../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:3319:19:HAL_TIM_Encoder_Stop	8	static
+../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:3319:19:HAL_TIM_Encoder_Stop	0	static
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:3379:19:HAL_TIM_Encoder_Start_IT	12	static
-../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:3479:19:HAL_TIM_Encoder_Stop_IT	8	static
+../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:3479:19:HAL_TIM_Encoder_Stop_IT	0	static
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:3544:19:HAL_TIM_Encoder_Start_DMA	32	static
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:3757:19:HAL_TIM_Encoder_Stop_DMA	16	static
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:4636:19:HAL_TIM_DMABurst_MultiWriteStart	24	static
@@ -75,7 +75,7 @@
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:6596:23:HAL_TIM_GetActiveChannel	0	static
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:6614:29:HAL_TIM_GetChannelState	0	static
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:6631:30:HAL_TIM_DMABurstState	0	static
-../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:6974:6:TIM_Base_SetConfig	8	static
+../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:6974:6:TIM_Base_SetConfig	0	static
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:273:19:HAL_TIM_Base_Init	8	static
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:656:19:HAL_TIM_OC_Init	8	static
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:1325:19:HAL_TIM_PWM_Init	8	static
@@ -83,7 +83,7 @@
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:2641:19:HAL_TIM_OnePulse_Init	16	static
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:3031:19:HAL_TIM_Encoder_Init	24	static
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:7097:6:TIM_OC2_SetConfig	16	static
-../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:4067:19:HAL_TIM_OC_ConfigChannel	16	static
+../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:4067:19:HAL_TIM_OC_ConfigChannel	8	static
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:4272:19:HAL_TIM_PWM_ConfigChannel	16	static
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:7558:6:TIM_TI1_SetConfig	16	static
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:4170:19:HAL_TIM_IC_ConfigChannel	24	static
@@ -91,9 +91,9 @@
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:7852:6:TIM_ETR_SetConfig	8	static
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:5292:19:HAL_TIM_ConfigOCrefClear	16	static
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:5471:19:HAL_TIM_ConfigClockSource	16	static
-../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:7424:26:TIM_SlaveTimer_SetConfig	16	static
-../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:5657:19:HAL_TIM_SlaveConfigSynchro	16	static
+../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:7424:26:TIM_SlaveTimer_SetConfig.constprop	8	static
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:5697:19:HAL_TIM_SlaveConfigSynchro_IT	16	static
+../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:5657:19:HAL_TIM_SlaveConfigSynchro	16	static
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:7884:6:TIM_CCxChannelCmd	8	static
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:797:19:HAL_TIM_OC_Start	8	static
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:1466:19:HAL_TIM_PWM_Start	0	static
@@ -111,5 +111,5 @@
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:2183:19:HAL_TIM_IC_Stop	16	static
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:2213:19:HAL_TIM_IC_Start_IT	8	static
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:2305:19:HAL_TIM_IC_Stop_IT	16	static
-../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:2377:19:HAL_TIM_IC_Start_DMA	32	static
+../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:2377:19:HAL_TIM_IC_Start_DMA	24	static
 ../Drivers/STM32F3xx_HAL_Driver/Src/stm32f3xx_hal_tim.c:2536:19:HAL_TIM_IC_Stop_DMA	16	static
