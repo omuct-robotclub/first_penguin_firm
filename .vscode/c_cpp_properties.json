@@ -1,0 +1,24 @@
+{
+  "configurations": [
+    {
+      "name": "STM32",
+      "includePath": [
+        "${workspaceFolder}/**",
+        "/home/teru/.platformio/packages/toolchain-gccarmnoneeabi/include/**",
+        "/home/teru/.platformio/packages/toolchain-gccarmnoneeabi/lib/gcc/arm-none-eabi/9.2.1/include/**",
+        "/usr/include/**"
+      ],
+      "defines": [
+        "USE_HAL_DRIVER",
+        "CAN",
+        "STM32F303x8",
+        "__weak=__attribute__((weak))"
+      ],
+      "compilerPath": "/home/teru/.platformio/packages/toolchain-gccarmnoneeabi/bin/arm-none-eabi-g++",
+      "cStandard": "c99",
+      "cppStandard": "c++17",
+      "intelliSenseMode": "gcc-arm"
+    }
+  ],
+  "version": 4
+}
