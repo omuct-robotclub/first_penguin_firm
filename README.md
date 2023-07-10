@@ -1,4 +1,4 @@
-# MD-5_firm
+# first_penguin_firm
 send below commands via CAN with the ID (std 0x00 (for all), ext 0x01 (for motor driver), ext original id).
 
 all data is little endian
