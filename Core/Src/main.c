@@ -58,11 +58,11 @@ CAN_FilterTypeDef filter;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_CAN_Init(void);
+static void MX_DMA_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
-static void MX_DMA_Init(void);
+static void MX_CAN_Init(void);
 static void MX_USART1_UART_Init(void);
 /* USER CODE BEGIN PFP */
 int CAN_read(stm_CAN::CAN_303x8* can,uint8_t* data, stm_CAN::FIFO fifo);
@@ -103,10 +103,10 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
-  MX_CAN_Init();
   MX_TIM1_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
+  MX_CAN_Init();
   MX_USART1_UART_Init();
   /* USER CODE BEGIN 2 */
 
@@ -170,16 +170,16 @@ int main(void)
         break;
       case 0x04:  //set data id
         can.subscribe_message(
-          (data[1]) | (data[2] << 8), 
-          stm_CAN::ID_type::std, 
-          stm_CAN::Frame_type::data, 
+          (data[1]) | (data[2] << 8),
+          stm_CAN::ID_type::std,
+          stm_CAN::Frame_type::data,
           stm_CAN::FIFO::_1);
         spnum = data[3];
         break;
       case 0x05:  //set pwm
         output_value = (data[1]) | (data[2] << 8);
         break;
-      
+
       default:
         break;
       }
@@ -268,6 +268,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+
   /** Initializes the CPU, AHB and APB buses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
@@ -307,24 +308,6 @@ static void MX_CAN_Init(void)
   /* USER CODE END CAN_Init 1 */
   hcan.Instance = CAN;
   hcan.Init.Prescaler = 2;
-  hcan.Init.Mode = CAN_MODE_NORMAL;
-  hcan.Init.SyncJumpWidth = CAN_SJW_1TQ;
-  hcan.Init.TimeSeg1 = CAN_BS1_14TQ;
-  hcan.Init.TimeSeg2 = CAN_BS2_3TQ;
-  hcan.Init.TimeTriggeredMode = DISABLE;
-  hcan.Init.AutoBusOff = DISABLE;
-  hcan.Init.AutoWakeUp = DISABLE;
-  hcan.Init.AutoRetransmission = DISABLE;
-  hcan.Init.ReceiveFifoLocked = DISABLE;
-  hcan.Init.TransmitFifoPriority = DISABLE;
-  if (HAL_CAN_Init(&hcan) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN CAN_Init 2 */
-#ifdef debug
-  hcan.Instance = CAN;
-  hcan.Init.Prescaler = 2;
   hcan.Init.Mode = CAN_MODE_LOOPBACK;
   hcan.Init.SyncJumpWidth = CAN_SJW_1TQ;
   hcan.Init.TimeSeg1 = CAN_BS1_14TQ;
@@ -339,7 +322,8 @@ static void MX_CAN_Init(void)
   {
     Error_Handler();
   }
-#endif
+  /* USER CODE BEGIN CAN_Init 2 */
+
   /* USER CODE END CAN_Init 2 */
 
 }
@@ -600,6 +584,8 @@ static void MX_DMA_Init(void)
 static void MX_GPIO_Init(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
+/* USER CODE BEGIN MX_GPIO_Init_1 */
+/* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOF_CLK_ENABLE();
@@ -616,6 +602,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(DISABLE_GPIO_Port, &GPIO_InitStruct);
 
+/* USER CODE BEGIN MX_GPIO_Init_2 */
+/* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
@@ -677,4 +665,3 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
-
