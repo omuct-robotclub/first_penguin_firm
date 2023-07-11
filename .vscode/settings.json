@@ -3,6 +3,8 @@
         "stm32f3xx_hal.h": "c",
         "stm32f3xx_hal_conf.h": "c",
         "ios": "cpp",
-        "cstdlib": "cpp"
-    }
+        "cstdlib": "cpp",
+        "cstdio": "cpp"
+    },
+    "C_Cpp.default.compilerPath": "/usr/bin/arm-none-eabi-g++"
 }
