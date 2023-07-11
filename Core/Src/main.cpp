@@ -130,50 +130,8 @@ int main(void) {
   ws2812::color _white = {12, 16, 32};
   ws2812::color _full = {255, 255, 255};
 
-  //note : 	subscribe control messages for stm_CAN::FIFO::_0
-  //		subscribe data message for stm_CAN::FIFO::_1
-  //		control message : 	0x00 (std) and ID for motor driver (0x01? (ext)) and original ID (ext)
-  //		data message    :	initialized and added from control message
-  const uint32_t original_id = 0x0100;
-  can.subscribe_message(0x00, stm_CAN::ID_type::std, stm_CAN::Frame_type::data, stm_CAN::FIFO::_0);
-  can.subscribe_message(0x01, stm_CAN::ID_type::ext, stm_CAN::Frame_type::data, stm_CAN::FIFO::_0);
-  can.subscribe_message(original_id, stm_CAN::ID_type::ext, stm_CAN::Frame_type::data, stm_CAN::FIFO::_0);
-
-  auto process_data = [&](uint8_t* data) {
-    switch(data[0]) {
-      case 0x00:  //stop
-        state = state::STATE_STOPPED;
-        break;
-      case 0x01:  //start
-        state = state::STATE_RUNNING;
-        break;
-      case 0x02:  //reset
-        HAL_NVIC_SystemReset();
-        state = state::STATE_STOPPED;
-        break;
-      case 0x03:  //get original id
-      {
-        uint8_t data_response[4];
-        for(uint8_t i = 0; i < 4; i++) {
-          data_response[i] = (original_id >> (i * 8)) & 0xFF;
-        }
-        can.send((data[1]) | (data[2] << 8), stm_CAN::ID_type::std, stm_CAN::Frame_type::data, data_response, 4);
-      } break;
-      case 0x04:  //set data id
-        can.subscribe_message((data[1]) | (data[2] << 8), stm_CAN::ID_type::std, stm_CAN::Frame_type::data,
-                              stm_CAN::FIFO::_1);
-        spnum = data[3];
-        break;
-      case 0x05:  //set pwm
-        output_value = (data[1]) | (data[2] << 8);
-        break;
-
-      default:
-        break;
-    }
-    return;
-  };
-
+  constexpr uint32_t can_id = 39;
+  can.subscribe_message(can_id, stm_CAN::ID_type::std, stm_CAN::Frame_type::data, stm_CAN::FIFO::_1);
 
   //test sending data	you can change below data in debug mode
 #ifdef debug
@@ -187,31 +145,16 @@ int main(void) {
   while(1) {
     uint8_t hoge[] = "hoge\n";
     HAL_UART_Transmit(&huart1, hoge, 5, 1);
-    uint8_t data_command[8];
-    if(CAN_read(&can, data_command, stm_CAN::FIFO::_0)) {
-      process_data(data_command);
-    }
     uint8_t data_drive[8];
     if(CAN_read(&can, data_drive, stm_CAN::FIFO::_1)) {
       output_value = (data_drive[spnum * 2] << (spnum * 2 * 8)) | (data_drive[spnum * 2 + 1] << (spnum * 2 * 8 + 8));
     }
 
-    switch(state) {
-      case state::STATE_STOPPED:
-        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_SET);
-        write_PWM(&htim1, TIM_CHANNEL_1, TIM_CHANNEL_2, 0);
-        pixels.colors[0] = _purple;
-        pixels.colors[1] = _purple;
-        pixels.rend();
-        break;
-      case state::STATE_RUNNING:
-        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);
-        write_PWM(&htim1, TIM_CHANNEL_1, TIM_CHANNEL_2, output_value);
-        pixels.colors[0] = (output_value > 0) ? _blue : (output_value == 0) ? _white : _orenge;
-        pixels.colors[1] = _white;
-        pixels.rend();
-        break;
-    }
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);
+    write_PWM(&htim1, TIM_CHANNEL_1, TIM_CHANNEL_2, output_value);
+    pixels.colors[0] = (output_value > 0) ? _blue : (output_value == 0) ? _white : _orenge;
+    pixels.colors[1] = _white;
+    pixels.rend();
     HAL_Delay(1);
 
     //test
