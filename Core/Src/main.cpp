@@ -21,6 +21,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include <cstdio>
+
 #include "CAN303x8.h"
 #include "ws2812double.h"
 /* USER CODE END Includes */
@@ -117,6 +119,7 @@ int main(void) {
   HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
   HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_2);
+  HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
 
   enum state {
     STATE_RUNNING,
@@ -146,9 +149,10 @@ int main(void) {
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  uint8_t buf[8];
+  std::snprintf(reinterpret_cast<char*>(buf), sizeof(buf), "\nI'm%3d", can_id);
   while(1) {
-    uint8_t hoge[] = "hoge\n";
-    HAL_UART_Transmit(&huart1, hoge, 5, 1);
+    HAL_UART_Transmit(&huart1, buf, sizeof(buf) - 1, 1);
     uint8_t data_drive[8];
     if(CAN_read(&can, data_drive, stm_CAN::FIFO::_1)) {
       output_value = (data_drive[spnum * 2] << (spnum * 2 * 8)) | (data_drive[spnum * 2 + 1] << (spnum * 2 * 8 + 8));
@@ -159,6 +163,28 @@ int main(void) {
     pixels.colors[0] = (output_value > 0) ? _blue : (output_value == 0) ? _white : _orenge;
     pixels.colors[1] = _white;
     pixels.rend();
+
+    // https://project-oki.hatenablog.com/entry/STM3211AD
+    uint32_t adc_buf;
+    HAL_ADC_Start(&hadc2);
+    if(HAL_ADC_PollForConversion(&hadc2, 1000) == HAL_OK) {
+      //AD変換の値をanalogValueに格納
+      adc_buf = HAL_ADC_GetValue(&hadc2);
+    }
+
+    // https://garberas.com/archives/244
+    // https://ioloa.com/blog/archives/365
+    struct {
+      uint32_t adc_val;
+      int16_t enc_buff;
+    } send_data = {adc_buf, TIM2->CNT};
+    // HAL_ADC_GetValue();
+    can.send(can_id + 10, stm_CAN::ID_type::std, stm_CAN::Frame_type::data, reinterpret_cast<uint8_t*>(&send_data),
+             sizeof(send_data));
+    uint8_t buf[50] = {};
+    std::snprintf(reinterpret_cast<char*>(buf), sizeof(buf), "\t%d\t%d\t", send_data.enc_buff, send_data.adc_val);
+    HAL_UART_Transmit(&huart1, buf, sizeof(buf) - 1, 1);
+
     HAL_Delay(1);
 
     //test
