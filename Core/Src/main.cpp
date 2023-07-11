@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <cstdio>
+
 #include "CAN303x8.h"
 #include "ws2812double.h"
 /* USER CODE END Includes */
@@ -118,7 +119,7 @@ int main(void) {
   HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
   HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_2);
-  HAL_TIM_Encoder_Start( &htim1, TIM_CHANNEL_ALL );
+  HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL);
 
   enum state {
     STATE_RUNNING,
@@ -136,7 +137,7 @@ int main(void) {
   ws2812::color _white = {12, 16, 32};
   ws2812::color _full = {255, 255, 255};
 
-  constexpr unsigned int can_id = 39;
+  constexpr unsigned int can_id = 38;
   can.subscribe_message(can_id, stm_CAN::ID_type::std, stm_CAN::Frame_type::data, stm_CAN::FIFO::_1);
 
   //test sending data	you can change below data in debug mode
@@ -151,7 +152,7 @@ int main(void) {
   uint8_t buf[8];
   std::snprintf(reinterpret_cast<char*>(buf), sizeof(buf), "I'm%3d\n", can_id);
   while(1) {
-    HAL_UART_Transmit(&huart1, buf, sizeof(buf), 1);
+    HAL_UART_Transmit(&huart1, buf, sizeof(buf) - 1, 1);
     uint8_t data_drive[8];
     if(CAN_read(&can, data_drive, stm_CAN::FIFO::_1)) {
       output_value = (data_drive[spnum * 2] << (spnum * 2 * 8)) | (data_drive[spnum * 2 + 1] << (spnum * 2 * 8 + 8));
@@ -170,7 +171,8 @@ int main(void) {
       uint16_t enc_buff;
       uint16_t adc_val;
     } send_data = {TIM1->CNT, ADC1->JDR1};
-    can.send(can_id + 10, stm_CAN::ID_type::std, stm_CAN::Frame_type::data, reinterpret_cast<uint8_t*>(&send_data), sizeof(send_data));
+    can.send(can_id + 10, stm_CAN::ID_type::std, stm_CAN::Frame_type::data, reinterpret_cast<uint8_t*>(&send_data),
+             sizeof(send_data));
 
     //test
 #ifdef debug
