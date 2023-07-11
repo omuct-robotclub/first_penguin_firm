@@ -119,7 +119,7 @@ int main(void) {
   HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_2);
   HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_2);
-  HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL);
+  HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
 
   enum state {
     STATE_RUNNING,
@@ -137,7 +137,7 @@ int main(void) {
   ws2812::color _white = {12, 16, 32};
   ws2812::color _full = {255, 255, 255};
 
-  constexpr unsigned int can_id = 38;
+  constexpr unsigned int can_id = 39;
   can.subscribe_message(can_id, stm_CAN::ID_type::std, stm_CAN::Frame_type::data, stm_CAN::FIFO::_1);
 
   //test sending data	you can change below data in debug mode
@@ -150,7 +150,7 @@ int main(void) {
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   uint8_t buf[8];
-  std::snprintf(reinterpret_cast<char*>(buf), sizeof(buf), "I'm%3d\n", can_id);
+  std::snprintf(reinterpret_cast<char*>(buf), sizeof(buf), "\nI'm%3d", can_id);
   while(1) {
     HAL_UART_Transmit(&huart1, buf, sizeof(buf) - 1, 1);
     uint8_t data_drive[8];
@@ -170,9 +170,12 @@ int main(void) {
     struct {
       uint16_t enc_buff;
       uint16_t adc_val;
-    } send_data = {TIM1->CNT, ADC1->JDR1};
+    } send_data = {TIM2->CNT, ADC1->JDR1};
     can.send(can_id + 10, stm_CAN::ID_type::std, stm_CAN::Frame_type::data, reinterpret_cast<uint8_t*>(&send_data),
              sizeof(send_data));
+    uint8_t buf[50] = {};
+    std::snprintf(reinterpret_cast<char*>(buf), sizeof(buf), "\t%d\t%d\t", send_data.enc_buff, send_data.adc_val);
+    HAL_UART_Transmit(&huart1, buf, sizeof(buf) - 1, 1);
 
     //test
 #ifdef debug
