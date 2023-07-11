@@ -1,0 +1,12 @@
+version: '3'
+services:
+  first_penguin_firm:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      # Working
+      - ..:/workspaces/first_penguin_firm:cached
+    working_dir: /workspaces/first_penguin_firm
+    tty: true
+    command: sleep inf

@@ -130,7 +130,7 @@ int main(void) {
   ws2812::color _white = {12, 16, 32};
   ws2812::color _full = {255, 255, 255};
 
-  constexpr uint32_t can_id = 39;
+  constexpr unsigned int can_id = 39;
   can.subscribe_message(can_id, stm_CAN::ID_type::std, stm_CAN::Frame_type::data, stm_CAN::FIFO::_1);
 
   //test sending data	you can change below data in debug mode
