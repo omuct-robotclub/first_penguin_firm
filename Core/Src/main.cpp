@@ -163,19 +163,29 @@ int main(void) {
     pixels.colors[0] = (output_value > 0) ? _blue : (output_value == 0) ? _white : _orenge;
     pixels.colors[1] = _white;
     pixels.rend();
-    HAL_Delay(1);
+
+    // https://project-oki.hatenablog.com/entry/STM3211AD
+    uint32_t adc_buf;
+    HAL_ADC_Start(&hadc2);
+    if(HAL_ADC_PollForConversion(&hadc2, 1000) == HAL_OK) {
+      //AD変換の値をanalogValueに格納
+      adc_buf = HAL_ADC_GetValue(&hadc2);
+    }
 
     // https://garberas.com/archives/244
     // https://ioloa.com/blog/archives/365
     struct {
-      uint16_t enc_buff;
-      uint16_t adc_val;
-    } send_data = {TIM2->CNT, ADC1->JDR1};
+      uint32_t adc_val;
+      int16_t enc_buff;
+    } send_data = {adc_buf, TIM2->CNT};
+    // HAL_ADC_GetValue();
     can.send(can_id + 10, stm_CAN::ID_type::std, stm_CAN::Frame_type::data, reinterpret_cast<uint8_t*>(&send_data),
              sizeof(send_data));
     uint8_t buf[50] = {};
     std::snprintf(reinterpret_cast<char*>(buf), sizeof(buf), "\t%d\t%d\t", send_data.enc_buff, send_data.adc_val);
     HAL_UART_Transmit(&huart1, buf, sizeof(buf) - 1, 1);
+
+    HAL_Delay(1);
 
     //test
 #ifdef debug
