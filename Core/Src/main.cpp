@@ -121,21 +121,17 @@ int main(void) {
   HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_2);
   HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
 
-  enum state {
-    STATE_RUNNING,
-    STATE_STOPPED,
-  } state = STATE_STOPPED;
   int16_t output_value = 0;
   uint8_t spnum = 0;  //specify number of recieved data to drive
   stm_CAN::CAN_303x8 can(&hcan);
   ws2812::ws2812_double pixels(&htim3, TIM_CHANNEL_4, &hdma_tim3_ch4_up, 45, 22);
 
-  ws2812::color _orenge = {48, 24, 0};
-  ws2812::color _blue = {0, 48, 128};
-  ws2812::color _green = {0, 48, 0};
-  ws2812::color _purple = {24, 0, 72};
-  ws2812::color _white = {12, 16, 32};
-  ws2812::color _full = {255, 255, 255};
+  [[maybe_unused]] ws2812::color _orenge = {48, 24, 0};
+  [[maybe_unused]] ws2812::color _blue = {0, 48, 128};
+  [[maybe_unused]] ws2812::color _green = {0, 48, 0};
+  [[maybe_unused]] ws2812::color _purple = {24, 0, 72};
+  [[maybe_unused]] ws2812::color _white = {12, 16, 32};
+  [[maybe_unused]] ws2812::color _full = {255, 255, 255};
 
   constexpr unsigned int can_id = 39;
   can.subscribe_message(can_id, stm_CAN::ID_type::std, stm_CAN::Frame_type::data, stm_CAN::FIFO::_1);
