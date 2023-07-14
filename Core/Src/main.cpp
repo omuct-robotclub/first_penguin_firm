@@ -149,8 +149,8 @@ int main(void) {
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  uint8_t buf[8];
-  std::snprintf(reinterpret_cast<char*>(buf), sizeof(buf), "\nI'm%3d", can_id);
+  uint8_t buf[10];
+  std::snprintf(reinterpret_cast<char*>(buf), sizeof(buf), "\nI'm%3d:%1d", can_id, spnum);
   while(1) {
     HAL_UART_Transmit(&huart1, buf, sizeof(buf) - 1, 1);
     uint8_t data_drive[8];
