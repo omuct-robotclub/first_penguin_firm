@@ -133,7 +133,7 @@ int main(void) {
   [[maybe_unused]] ws2812::color _white = {12, 16, 32};
   [[maybe_unused]] ws2812::color _full = {255, 255, 255};
 
-  constexpr unsigned int can_id = 39;
+  constexpr unsigned int can_id = 30;
   can.subscribe_message(can_id, stm_CAN::ID_type::std, stm_CAN::Frame_type::data, stm_CAN::FIFO::_1);
 
   //test sending data	you can change below data in debug mode
@@ -175,8 +175,8 @@ int main(void) {
       int16_t enc_buff;
     } send_data = {adc_buf, TIM2->CNT};
     // HAL_ADC_GetValue();
-    can.send(can_id + 10, stm_CAN::ID_type::std, stm_CAN::Frame_type::data, reinterpret_cast<uint8_t*>(&send_data),
-             sizeof(send_data));
+    can.send(can_id + spnum + 1, stm_CAN::ID_type::std, stm_CAN::Frame_type::data,
+             reinterpret_cast<uint8_t*>(&send_data), sizeof(send_data));
     uint8_t buf[50] = {};
     std::snprintf(reinterpret_cast<char*>(buf), sizeof(buf), "\t%d\t%d\t", send_data.enc_buff, send_data.adc_val);
     HAL_UART_Transmit(&huart1, buf, sizeof(buf) - 1, 1);
