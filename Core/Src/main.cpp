@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include <cstdio>
+#include <utility>
 
 #include "CAN303x8.h"
 #include "ws2812double.h"
@@ -72,6 +73,7 @@ static void MX_ADC2_Init(void);
 /* USER CODE BEGIN PFP */
 int CAN_read(stm_CAN::CAN_303x8* can, uint8_t* data, stm_CAN::FIFO fifo);
 void write_PWM(TIM_HandleTypeDef* htim, uint32_t channel1, uint32_t channel2, int16_t val);
+void read_enc(int32_t& enc_val);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -160,25 +162,22 @@ int main(void) {
     pixels.colors[1] = _white;
     pixels.rend();
 
-    // https://project-oki.hatenablog.com/entry/STM3211AD
-    uint32_t adc_buf;
+    struct {
+      int32_t enc_buff;
+      uint32_t adc_val;
+    } send_data = {};
+    read_enc(send_data.enc_buff);
+
     HAL_ADC_Start(&hadc2);
     if(HAL_ADC_PollForConversion(&hadc2, 1000) == HAL_OK) {
       //AD変換の値をanalogValueに格納
-      adc_buf = HAL_ADC_GetValue(&hadc2);
+      send_data.adc_val = HAL_ADC_GetValue(&hadc2);
     }
 
-    // https://garberas.com/archives/244
-    // https://ioloa.com/blog/archives/365
-    struct {
-      uint32_t adc_val;
-      int16_t enc_buff;
-    } send_data = {adc_buf, TIM2->CNT};
-    // HAL_ADC_GetValue();
     can.send(can_id + spnum + 1, stm_CAN::ID_type::std, stm_CAN::Frame_type::data,
              reinterpret_cast<uint8_t*>(&send_data), sizeof(send_data));
     uint8_t buf[50] = {};
-    std::snprintf(reinterpret_cast<char*>(buf), sizeof(buf), "\t%d\t%d\t", send_data.enc_buff, send_data.adc_val);
+    std::snprintf(reinterpret_cast<char*>(buf), sizeof(buf), "\t% 4x\t%lu\t", send_data.enc_buff, send_data.adc_val);
     HAL_UART_Transmit(&huart1, buf, sizeof(buf) - 1, 1);
 
     HAL_Delay(1);
@@ -588,6 +587,10 @@ void write_PWM(TIM_HandleTypeDef* htim, uint32_t channel1, uint32_t channel2, in
   __HAL_TIM_SET_COMPARE(htim, channel1, clamp_unsigned(val) >> 3);
   __HAL_TIM_SET_COMPARE(htim, channel2, clamp_unsigned(-val) >> 3);
   return;
+}
+
+void read_enc(int32_t& enc_val) {
+  enc_val += std::exchange(TIM2->CNT, 0);
 }
 /* USER CODE END 4 */
 
