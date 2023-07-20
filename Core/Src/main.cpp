@@ -162,7 +162,7 @@ int main(void) {
     pixels.colors[1] = _white;
     pixels.rend();
 
-    struct {
+    static struct {
       int32_t enc_buff;
       uint32_t adc_val;
     } send_data = {};
