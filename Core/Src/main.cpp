@@ -177,7 +177,7 @@ int main(void) {
     can.send(can_id + spnum + 1, stm_CAN::ID_type::std, stm_CAN::Frame_type::data,
              reinterpret_cast<uint8_t*>(&send_data), sizeof(send_data));
     uint8_t buf[50] = {};
-    std::snprintf(reinterpret_cast<char*>(buf), sizeof(buf), "\t% 4x\t%lu\t", send_data.enc_buff, send_data.adc_val);
+    std::snprintf(reinterpret_cast<char*>(buf), sizeof(buf), "\t% 5ld\t%4lu\t", send_data.enc_buff, send_data.adc_val);
     HAL_UART_Transmit(&huart1, buf, sizeof(buf) - 1, 1);
 
     HAL_Delay(1);
