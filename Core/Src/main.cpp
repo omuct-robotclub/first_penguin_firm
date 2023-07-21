@@ -180,7 +180,7 @@ int main(void) {
     std::snprintf(reinterpret_cast<char*>(buf), sizeof(buf), "\t% 5ld\t%4lu\t", send_data.enc_buff, send_data.adc_val);
     HAL_UART_Transmit(&huart1, buf, sizeof(buf) - 1, 1);
 
-    HAL_Delay(1);
+    HAL_Delay(10);
 
     //test
 #ifdef debug
