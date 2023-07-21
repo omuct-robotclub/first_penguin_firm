@@ -154,14 +154,12 @@ int main(void) {
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  uint8_t buf[10];
-  std::snprintf(reinterpret_cast<char*>(buf), sizeof(buf), "\nI'm%3d:%1d", can_id, spnum);
   while(1) {
-    HAL_UART_Transmit(&huart1, buf, sizeof(buf) - 1, 1);
     uint8_t data_drive[8];
     if(CAN_read(&can, data_drive, stm_CAN::FIFO::_1)) {
       output_value = (data_drive[spnum * 2] << (spnum * 2 * 8)) | (data_drive[spnum * 2 + 1] << (spnum * 2 * 8 + 8));
     }
+    printf("I'm%3d:%1d\t", can_id, spnum);
 
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);
     write_PWM(&htim1, TIM_CHANNEL_1, TIM_CHANNEL_2, output_value);
@@ -182,10 +180,8 @@ int main(void) {
     }
 
     can.send(can_id + spnum + 1, stm_CAN::ID_type::std, stm_CAN::Frame_type::data,
-             reinterpret_cast<uint8_t*>(&send_data), sizeof(send_data));
-    uint8_t buf[50] = {};
-    std::snprintf(reinterpret_cast<char*>(buf), sizeof(buf), "\t% 5ld\t%4lu\t", send_data.enc_buff, send_data.adc_val);
-    HAL_UART_Transmit(&huart1, buf, sizeof(buf) - 1, 1);
+                        reinterpret_cast<uint8_t*>(&send_data), sizeof(send_data));
+    printf("% 5ld\t%4lu\t", send_data.enc_buff, send_data.adc_val);
 
     HAL_Delay(10);
 
@@ -569,19 +565,15 @@ static void MX_GPIO_Init(void) {
 
 /* USER CODE BEGIN 4 */
 int CAN_read(stm_CAN::CAN_303x8* can, uint8_t* data, stm_CAN::FIFO fifo) {
-  uint8_t received[] = "received ";
-  uint8_t cr_lf[] = "\r\n";
-  uint8_t err[] = "error\r\n";
   switch(can->read(fifo, data)) {
     case stm_CAN::read_retval::message_received:
     case stm_CAN::read_retval::more_message_received:
-      HAL_UART_Transmit(&huart1, received, 9, 1);
-      HAL_UART_Transmit(&huart1, data, 8, 1);
-      HAL_UART_Transmit(&huart1, cr_lf, 2, 1);
+      printf("received %08lx %08lx\n", reinterpret_cast<uint32_t*>(data)[0], reinterpret_cast<uint32_t*>(data)[1]);
       return 1;
-    case stm_CAN::read_retval::error:
-      HAL_UART_Transmit(&huart1, err, 7, 1);
     case stm_CAN::read_retval::no_message:
+      printf("no msg ");
+    case stm_CAN::read_retval::error:
+      printf("error\n");
     default:
       return 0;
   }
