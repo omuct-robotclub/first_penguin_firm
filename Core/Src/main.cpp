@@ -131,7 +131,6 @@ int main(void) {
   HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
 
   int16_t output_value = 0;
-  uint8_t spnum = 0;  //specify number of recieved data to drive
   stm_CAN::CAN_303x8 can(&hcan);
   ws2812::ws2812_double pixels(&htim3, TIM_CHANNEL_4, &hdma_tim3_ch4_up, 45, 22);
 
@@ -143,6 +142,7 @@ int main(void) {
   [[maybe_unused]] ws2812::color _full = {255, 255, 255};
 
   constexpr unsigned int can_id = 30;
+  uint8_t spnum = 0;  //specify number of recieved data to drive
   can.subscribe_message(can_id, stm_CAN::ID_type::std, stm_CAN::Frame_type::data, stm_CAN::FIFO::_1);
 
   //test sending data	you can change below data in debug mode
@@ -157,9 +157,9 @@ int main(void) {
   while(1) {
     uint8_t data_drive[8];
     if(CAN_read(&can, data_drive, stm_CAN::FIFO::_1)) {
-      output_value = (data_drive[spnum * 2] << (spnum * 2 * 8)) | (data_drive[spnum * 2 + 1] << (spnum * 2 * 8 + 8));
+      output_value = data_drive[spnum * 2 + 1] << 8 | data_drive[spnum * 2];
     }
-    printf("I'm%3d:%1d\t", can_id, spnum);
+    printf("I'm%3d:%1d\t%d\t", can_id, spnum, output_value);
 
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_5, GPIO_PIN_RESET);
     write_PWM(&htim1, TIM_CHANNEL_1, TIM_CHANNEL_2, output_value);
