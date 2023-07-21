@@ -74,6 +74,13 @@ static void MX_ADC2_Init(void);
 int CAN_read(stm_CAN::CAN_303x8* can, uint8_t* data, stm_CAN::FIFO fifo);
 void write_PWM(TIM_HandleTypeDef* htim, uint32_t channel1, uint32_t channel2, int16_t val);
 void read_enc(int32_t& enc_val);
+#ifdef __cplusplus
+extern "C" {
+#endif
+int _write(int file, char* ptr, int len);
+#ifdef __cplusplus
+}
+#endif
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -87,7 +94,7 @@ void read_enc(int32_t& enc_val);
   */
 int main(void) {
   /* USER CODE BEGIN 1 */
-
+  setbuf(stdout, NULL);
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -592,6 +599,17 @@ void write_PWM(TIM_HandleTypeDef* htim, uint32_t channel1, uint32_t channel2, in
 void read_enc(int32_t& enc_val) {
   enc_val += std::exchange(TIM2->CNT, 0);
 }
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+int _write(int file, char* ptr, int len) {
+  HAL_UART_Transmit(&huart1, (uint8_t*)ptr, len, 10);
+  return len;
+}
+#ifdef __cplusplus
+}
+#endif
 /* USER CODE END 4 */
 
 /**
