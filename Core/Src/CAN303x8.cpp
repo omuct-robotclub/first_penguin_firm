@@ -27,8 +27,8 @@ HAL_StatusTypeDef CAN_303x8::subscribe_message(uint32_t ID, ID_type ide, Frame_t
   CAN_FilterTypeDef filter;
   filter.FilterIdHigh = id_for_filter >> 16;
   filter.FilterIdLow = id_for_filter;
-  filter.FilterMaskIdHigh = id_for_filter >> 16;
-  filter.FilterMaskIdLow = id_for_filter;
+  filter.FilterMaskIdHigh = UINT16_MAX;
+  filter.FilterMaskIdLow = UINT16_MAX;
   filter.FilterScale = Filter_scale::_32;
   filter.FilterMode = Filter_mode::mask;
   filter.FilterFIFOAssignment = fifo;
