@@ -3,6 +3,7 @@ set -euxo pipefail
 cd "${BASH_SOURCE[0]%/*}"/..
 
 make clean
+rm -rf artifacts
 
 mkdir -p artifacts
 for id in {45,40,35,30}; do
@@ -13,3 +14,7 @@ for id in {45,40,35,30}; do
     mv "build/first_penguin_firm.bin" "artifacts/first_penguin_firm_${id}_${num}.bin"
   done
 done
+
+tar -zcvf artifacts.tar.gz artifacts
+zip -r artifacts.zip artifacts
+mv artifacts.* artifacts
