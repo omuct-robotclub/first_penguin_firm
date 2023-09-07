@@ -155,9 +155,13 @@ int main(void) {
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while(1) {
+    static uint32_t last_receive_time = 0;
     uint8_t data_drive[8];
     if(CAN_read(&can, data_drive, stm_CAN::FIFO::_1)) {
       output_value = data_drive[spnum * 2 + 1] << 8 | data_drive[spnum * 2];
+      last_receive_time = HAL_GetTick();
+    } else if(HAL_GetTick() - last_receive_time > 100) {
+      output_value = 0;
     }
     printf("I'm%3d:%1d\t%d\t", can_id, spnum, output_value);
 
@@ -180,7 +184,7 @@ int main(void) {
     }
 
     can.send(can_id + spnum + 1, stm_CAN::ID_type::std, stm_CAN::Frame_type::data,
-                        reinterpret_cast<uint8_t*>(&send_data), sizeof(send_data));
+             reinterpret_cast<uint8_t*>(&send_data), sizeof(send_data));
     printf("% 5ld\t%4lu\t", send_data.enc_buff, send_data.adc_val);
 
     HAL_Delay(10);
